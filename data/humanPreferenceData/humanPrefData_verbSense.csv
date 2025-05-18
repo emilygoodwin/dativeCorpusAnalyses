@@ -1,0 +1,501 @@
+verbLemma,theme,verbSense
+advance,the money,Transfer Posession
+advance,the loan,Transfer Posession
+advance,a payment,Transfer Posession
+advance,something,Transfer Posession
+advance,a proposal,Abstract
+allocate,some land,Abstract
+allocate,the tickets,Abstract
+allocate,the money,Abstract
+allocate,something,Abstract
+allocate,some space,Abstract
+allot,the bonus,Abstract
+allot,the money,Abstract
+allot,some gas,Abstract
+allot,something,Abstract
+allot,two tickets,Abstract
+ask,a question,Communication
+ask,some questions,Communication
+ask,something,Communication
+ask,the question,Communication
+ask,the questions,Communication
+assign,the responsibility,Abstract
+assign,an assistant,Abstract
+assign,something,Abstract
+assign,a desk,Transfer Posession
+assign,the job,Abstract
+award,the job,Abstract
+award,some tickets,Transfer Posession
+award,a raise,Abstract
+award,something,Abstract
+award,the trophy,Transfer Posession
+bat,a curve-ball,Transfer Posession
+bat,a foul ball,Transfer Posession
+bat,something,Transfer Posession
+bat,the ball,Transfer Posession
+bat,the baseball,Transfer Posession
+bequeath,the estate,Transfer Posession
+bequeath,the money,Transfer Posession
+bequeath,a portrait,Transfer Posession
+bequeath,something,Transfer Posession
+bequeath,a large sum,Transfer Posession
+bounce,something,Transfer Posession
+bounce,the shoe,Transfer Posession
+bounce,a bottle,Transfer Posession
+bounce,a toy,Transfer Posession
+bounce,the ball,Transfer Posession
+bring,a blanket,Transfer Posession
+bring,something,Transfer Posession
+bring,the gift,Transfer Posession
+bring,the cake,Transfer Posession
+bring,a meal,Transfer Posession
+bus,some instruments,Transfer Posession
+bus,some suitcases,Transfer Posession
+bus,the packages,Transfer Posession
+bus,the students,Transfer Posession
+bus,something,Transfer Posession
+cable,some directions,Communication
+cable,something,Communication
+cable,the news,Communication
+cable,the instructons,Communication
+cable,a location,Communication
+carry,the suitcase,Transfer Posession
+carry,a candle,Transfer Posession
+carry,the box,Transfer Posession
+carry,a plate,Transfer Posession
+carry,something,Transfer Posession
+cart,some books,Transfer Posession
+cart,something,Transfer Posession
+cart,the clothes,Transfer Posession
+cart,the fruit,Transfer Posession
+cart,some medicine,Transfer Posession
+catapult,something,Transfer Posession
+catapult,the box,Transfer Posession
+catapult,a ball,Transfer Posession
+catapult,the contents,Transfer Posession
+catapult,a container,Transfer Posession
+cede,the point,Abstract
+cede,the floor,Abstract
+cede,a case,Abstract
+cede,a win,Abstract
+cede,something,Abstract
+chuck,a bag,Transfer Posession
+chuck,something,Transfer Posession
+chuck,the ball,Transfer Posession
+chuck,a tennis ball,Transfer Posession
+chuck,the baseball,Transfer Posession
+cite,the book,Communication
+cite,a quote,Communication
+cite,some results,Communication
+cite,the passage,Communication
+cite,something,Communication
+concede,the point,Abstract
+concede,a spot,Transfer Posession
+concede,something,Abstract
+concede,the victory,Abstract
+concede,an argument,Abstract
+drag,a seat,Transfer Posession
+drag,the chair,Transfer Posession
+drag,something,Transfer Posession
+drag,a footrest,Transfer Posession
+drag,the box,Transfer Posession
+drive,the car,Transfer Posession
+drive,the van,Transfer Posession
+drive,a fastball,Transfer Posession
+drive,a scooter,Transfer Posession
+drive,something,Transfer Posession
+email,the message,Communication
+email,some instructions,Communication
+email,the information,Communication
+email,some comment,Communication
+email,something,Communication
+extend,her hand,Abstract
+extend,the courtesy,Abstract
+extend,an offer,Abstract
+extend,something,Abstract
+extend,a warm welcome,Abstract
+fax,a letter,Communication
+fax,a form,Communication
+fax,something,Communication
+fax,her signature,Communication
+fax,the copy,Communication
+feed,the food,Transfer Posession
+feed,the dinner,Transfer Posession
+feed,something,Transfer Posession
+feed,some cookies,Transfer Posession
+feed,some leftovers,Transfer Posession
+ferry,something,Transfer Posession
+ferry,the supplies,Transfer Posession
+ferry,the package,Transfer Posession
+ferry,some medicine,Transfer Posession
+ferry,some goods,Transfer Posession
+flick,something,Transfer Posession
+flick,the coin,Transfer Posession
+flick,the ball,Transfer Posession
+flick,a quarter,Transfer Posession
+flick,a look,Abstract
+fling,a blanket,Transfer Posession
+fling,something,Transfer Posession
+fling,the newspaper,Transfer Posession
+fling,the jacket,Transfer Posession
+fling,an apple,Transfer Posession
+flip,some candy,Transfer Posession
+flip,something,Transfer Posession
+flip,the bird,Abstract
+flip,a stick,Transfer Posession
+flip,the finger,Abstract
+float,the idea,Communication
+float,the suggestion,Communication
+float,a proposal,Communication
+float,a bottle,Transfer Posession
+float,something,Abstract
+fly,something,Transfer Posession
+fly,the goods,Transfer Posession
+fly,some weapons,Transfer Posession
+fly,the reserves,Transfer Posession
+fly,some supplies,Transfer Posession
+forward,the message,Communication
+forward,the information,Communication
+forward,something,Transfer Posession
+forward,a package,Transfer Posession
+forward,an email,Communication
+give,the book,Transfer Posession
+give,the job,Transfer Posession
+give,something,Transfer Posession
+give,a gift,Transfer Posession
+give,a message,Communication
+grant,the opportunity,Abstract
+grant,something,Transfer Posession
+grant,the rights,Abstract
+grant,another chance,Abstract
+grant,permission,Abstract
+guarantee,something,Future Posession 
+guarantee,the job,Future Posession 
+guarantee,the payment,Future Posession 
+guarantee,a refund,Future Posession 
+guarantee,a spot,Future Posession 
+hand,the note,Transfer Posession
+hand,something,Transfer Posession
+hand,the sandwich,Transfer Posession
+hand,some instructions,Transfer Posession
+hand,a pill,Transfer Posession
+haul,something,Transfer Posession
+haul,the bananas,Transfer Posession
+haul,the fruit,Transfer Posession
+haul,a shipment,Transfer Posession
+haul,some furniture,Transfer Posession
+heave,the basket,Transfer Posession
+heave,a ball,Transfer Posession
+heave,something,Transfer Posession
+heave,the suitcase,Transfer Posession
+heave,a carton,Transfer Posession
+hit,the football,Transfer Posession
+hit,the ball,Transfer Posession
+hit,a baseball,Transfer Posession
+hit,a curveball,Transfer Posession
+hit,something,Transfer Posession
+hurl,the key,Transfer Posession
+hurl,the bag,Transfer Posession
+hurl,a ball,Transfer Posession
+hurl,something,Transfer Posession
+hurl,a necklace,Transfer Posession
+kick,the weapon,Transfer Posession
+kick,the ball,Transfer Posession
+kick,a weapon,Transfer Posession
+kick,something,Transfer Posession
+kick,a football,Transfer Posession
+lease,the home,Transfer Posession
+lease,a space,Transfer Posession
+lease,some equipment,Transfer Posession
+lease,the apartment,Transfer Posession
+lease,something,Transfer Posession
+lend,some money,Transfer Posession
+lend,something,Transfer Posession
+lend,the room,Transfer Posession
+lend,the apartment,Transfer Posession
+lend,a bike,Transfer Posession
+loan,something,Transfer Posession
+loan,the room,Transfer Posession
+loan,some equipment,Transfer Posession
+loan,a space,Transfer Posession
+loan,the apartment,Transfer Posession
+lob,something,Transfer Posession
+lob,the idea,Communication
+lob,the ball,Transfer Posession
+lob,a question,Communication
+lob,a tennis ball,Transfer Posession
+lug,the wood,Transfer Posession
+lug,some groceries,Transfer Posession
+lug,something,Transfer Posession
+lug,some water,Transfer Posession
+lug,the suitcase,Transfer Posession
+mail,the package,Transfer Posession
+mail,something,Transfer Posession
+mail,the letter,Communication
+mail,a note,Communication
+mail,a gift,Communication
+offer,the gift,Future Posession 
+offer,the job,Abstract
+offer,some advice,Abstract
+offer,something,Future Posession 
+offer,a payment,Future Posession 
+owe,the funds,Future Posession 
+owe,a favor,Abstract
+owe,a job,Abstract
+owe,the money,Future Posession 
+owe,something,Future Posession 
+pass,something,Transfer Posession
+pass,the salt,Transfer Posession
+pass,the hat,Transfer Posession
+pass,a note,Transfer Posession
+pass,some cake,Transfer Posession
+pay,a visit,Abstract
+pay,the money,Transfer Posession
+pay,the fee,Transfer Posession
+pay,a compliment,Communication
+pay,something,Transfer Posession
+peddle,some handbags,Transfer Posession
+peddle,snake-oil,Abstract
+peddle,the magic potion,Transfer Posession
+peddle,some souvenirs,Transfer Posession
+peddle,something,Transfer Posession
+phone,the message,Communication
+phone,a welcome,Communication
+phone,something,Communication
+phone,a request,Communication
+phone,the greetings,Communication
+pitch,the idea,Communication
+pitch,the suggestion,Communication
+pitch,something,Communication
+pitch,a proposal,Communication
+pitch,a candidate,Communication
+post,a box,Transfer Posession
+post,some papers,Transfer Posession
+post,the letter,Communication
+post,the package,Transfer Posession
+post,something,Transfer Posession
+preach,the truth,Communication
+preach,the gospel,Communication
+preach,a story,Communication
+preach,something,Communication
+preach,a sermon,Communication
+promise,a car,Future Posession 
+promise,something,Communication
+promise,the vacation,Future Posession 
+promise,the job,Future Posession 
+promise,a chance,Communication
+pull,the chair,Transfer Posession
+pull,the boat,Transfer Posession
+pull,a seat,Transfer Posession
+pull,a box,Transfer Posession
+pull,something,Transfer Posession
+punt,a ball,Transfer Posession
+punt,a question,Communication
+punt,the football,Transfer Posession
+punt,the idea,Communication
+punt,something,Transfer Posession
+push,the box,Transfer Posession
+push,a plate,Transfer Posession
+push,a book,Transfer Posession
+push,something,Transfer Posession
+push,the suitcase,Transfer Posession
+quote,a sentence,Communication
+quote,some results,Communication
+quote,something,Communication
+quote,the passage,Communication
+quote,the speech,Communication
+radio,a location,Communication
+radio,something,Communication
+radio,the news,Communication
+radio,some directions,Communication
+radio,the instructons,Communication
+read,the book,Communication
+read,a note,Communication
+read,the article,Communication
+read,a story,Communication
+read,something,Communication
+refund,the amount,Transfer Posession
+refund,a sum,Transfer Posession
+refund,a charge,Transfer Posession
+refund,something,Transfer Posession
+refund,the money,Transfer Posession
+relay,some findings,Communication
+relay,something,Communication
+relay,some information,Communication
+relay,the results,Communication
+relay,the message,Communication
+rent,the apartment,Transfer Posession
+rent,a room,Transfer Posession
+rent,the space,Transfer Posession
+rent,something,Transfer Posession
+rent,some equipment,Transfer Posession
+repay,the favor,Abstract
+repay,some money,Transfer Posession
+repay,the rent,Transfer Posession
+repay,some funds,Transfer Posession
+repay,something,Transfer Posession
+roll,a baseball,Transfer Posession
+roll,a can,Transfer Posession
+roll,something,Transfer Posession
+roll,the dice,Transfer Posession
+roll,the ball,Transfer Posession
+row,some goods,Transfer Posession
+row,something,Transfer Posession
+row,the supplies,Transfer Posession
+row,the package,Transfer Posession
+row,some medicine,Transfer Posession
+sell,the car,Transfer Posession
+sell,some coffee,Transfer Posession
+sell,a bike,Transfer Posession
+sell,the house,Transfer Posession
+sell,something,Transfer Posession
+send,something,Transfer Posession
+send,a text,Communication
+send,the present,Transfer Posession
+send,an email,Communication
+send,the letter,Communication
+ship,a package,Transfer Posession
+ship,the letter,Transfer Posession
+ship,a box,Transfer Posession
+ship,something,Transfer Posession
+ship,the present,Transfer Posession
+shoot,a glance,Abstract
+shoot,something,Transfer Posession
+shoot,the e-mail,Communication
+shoot,the look,Abstract
+shoot,a text,Communication
+shove,a box,Transfer Posession
+shove,the plate,Transfer Posession
+shove,a letter,Communication
+shove,something,Transfer Posession
+shove,the glass,Transfer Posession
+show,a picture,Transfer Posession
+show,a trick,Abstract
+show,the way,Abstract
+show,the city,Abstract
+show,something,Communication
+shuttle,the packages,Transfer Posession
+shuttle,the students,Transfer Posession
+shuttle,some instruments,Transfer Posession
+shuttle,some suitcases,Transfer Posession
+shuttle,something,Transfer Posession
+signal,a score,Communication
+signal,a formation,Abstract
+signal,the time,Communication
+signal,her intentions,Abstract
+signal,something,Communication
+slam,a beer,Transfer Posession
+slam,something,Transfer Posession
+slam,the money,Transfer Posession
+slam,a fastball,Transfer Posession
+slam,the ball,Transfer Posession
+slap,a ticket,Transfer Posession
+slap,something,Transfer Posession
+slap,the ball,Transfer Posession
+slap,a fine,Transfer Posession
+slap,the packet,Transfer Posession
+slide,the dice,Transfer Posession
+slide,a drink,Transfer Posession
+slide,something,Transfer Posession
+slide,the ball,Transfer Posession
+slide,a note,Communication
+sling,something,Transfer Posession
+sling,the ball,Transfer Posession
+sling,a glance,Abstract
+sling,a bag,Transfer Posession
+sling,the drink,Transfer Posession
+slip,the note,Communication
+slip,the sandwich,Transfer Posession
+slip,a pill,Transfer Posession
+slip,something,Transfer Posession
+slip,some instructions,Communication
+smuggle,the packages,Transfer Posession
+smuggle,the students,Transfer Posession
+smuggle,something,Transfer Posession
+smuggle,a knife,Transfer Posession
+smuggle,some instruments,Transfer Posession
+sneak,the drink,Transfer Posession
+sneak,the note,Transfer Posession
+sneak,something,Transfer Posession
+sneak,a look,Abstract
+sneak,a cookie,Transfer Posession
+take,the blanket,Transfer Posession
+take,a gift,Transfer Posession
+take,a cake,Transfer Posession
+take,something,Transfer Posession
+take,the meal,Transfer Posession
+teach,a concept,Communication
+teach,something,Communication
+teach,the piece,Communication
+teach,an idea,Communication
+teach,the lines,Communication
+telephone,the results,Communication
+telephone,some news,Communication
+telephone,the message,Communication
+telephone,some information,Communication
+telephone,something,Communication
+tell,the tale,Communication
+tell,the news,Communication
+tell,a story,Communication
+tell,some information,Communication
+tell,something,Communication
+throw,the blanket,Transfer Posession
+throw,a book,Transfer Posession
+throw,something,Transfer Posession
+throw,the ball,Transfer Posession
+throw,a soda,Transfer Posession
+tip,ten bucks,Transfer Posession
+tip,a grand,Transfer Posession
+tip,a dollar,Transfer Posession
+tip,fifteen percent,Transfer Posession
+tip,something,Transfer Posession
+toss,a key,Transfer Posession
+toss,the jacket,Transfer Posession
+toss,a glance,Abstract
+toss,the ball,Transfer Posession
+toss,something,Transfer Posession
+tow,a van,Transfer Posession
+tow,a boat,Transfer Posession
+tow,the truck,Transfer Posession
+tow,the car,Transfer Posession
+tow,something,Transfer Posession
+trade,some food,Transfer Posession
+trade,something,Transfer Posession
+trade,the job,Transfer Posession
+trade,the apples,Transfer Posession
+trade,some pictures,Transfer Posession
+truck,the fruit,Transfer Posession
+truck,some milk,Transfer Posession
+truck,something,Transfer Posession
+truck,the packages,Transfer Posession
+truck,some suitcases,Transfer Posession
+tug,the chair,Transfer Posession
+tug,the hamper,Transfer Posession
+tug,a canoe,Transfer Posession
+tug,something,Transfer Posession
+tug,a kayak,Transfer Posession
+wheel,the cement,Transfer Posession
+wheel,some potatoes,Transfer Posession
+wheel,the buckets,Transfer Posession
+wheel,some fruit,Transfer Posession
+wheel,something,Transfer Posession
+will,the estate,Transfer Posession
+will,the house,Transfer Posession
+will,a painting,Transfer Posession
+will,her entire fortune,Transfer Posession
+will,something,Transfer Posession
+wire,the rent,Transfer Posession
+wire,some money,Transfer Posession
+wire,something,Transfer Posession
+wire,the payment,Transfer Posession
+wire,some funds,Transfer Posession
+write,the message,Communication
+write,a check,Communication
+write,the letter,Communication
+write,a note,Communication
+write,something,Communication
+yield,the floor,Abstract
+yield,something,Abstract
+yield,the time,Abstract
+yield,some peace,Abstract
+yield,some comfort,Abstract

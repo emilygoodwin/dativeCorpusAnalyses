@@ -1,0 +1,390 @@
+---
+title: "R Notebook"
+---
+# Setup
+```{r}
+library(tidyverse)
+library(lme4)
+library(sjPlot)
+library(broom.mixed)
+library(ggrepel)
+library(brms)
+library(tidybayes)
+library(patchwork)
+library(scales) # Make plots with log transformed INTERVALS 
+library(car)    # Used for vif analysis
+library(here)   #
+
+theme_set(theme_light(base_size = 20)) 
+```
+
+# Load Data
+```{r}
+
+df.all_preferences <- readRDS(here('data', 'gold_structural_preferences.Rds'))
+df.gold_labels <- readRDS(here('data', 'gold_all.rds'))
+```
+
+
+# Corpus Summary Plots- Figure 1 
+```{r}
+df.gold_labels %>% nrow() #23320
+df.gold_labels %>% filter(isDative) %>% nrow()#7278
+df.gold_labels %>% filter(isDative & !ableToTiebreak) %>% nrow()#372
+```
+
+## Figure 1A: Corpus Contents
+```{r}
+plot.corpusSummary1 <- df.gold_labels %>% 
+  mutate(structure = case_when(structure == "PP" ~ "To-form", 
+                                .default = "DO")) %>% 
+  group_by(isDative, structure) %>% 
+  mutate(isDative = case_when(
+    isDative == TRUE ~ 'Datives', 
+    .default = 'Non-\nDatives')) %>% 
+  ggplot(aes(x = isDative, 
+             fill = structure)) + 
+  geom_bar(position = 'stack') + 
+  labs(x = '', 
+       fill = '') +
+  scale_fill_manual(values = c("#016895",  "#8C1515"))+
+  theme(legend.position = "bottom", 
+        legend.box.spacing = unit(0, "pt"),
+        legend.margin=margin(-25,0,0,0))
+
+plot.corpusSummary1
+
+```
+
+
+## Figure 1B: Frequency vs DO Preference
+```{r}
+plot.corpusSummary2 <- df.all_preferences %>% 
+  filter(imputed_ditransitive_rate > 0) %>% 
+  ggplot(aes(x = projected_dative_instances_by_college_age, 
+             y = imputed_DO_skew)) + 
+  geom_smooth(method  = "lm", color = "#67AFD2")+
+  geom_point() +  
+  geom_text_repel(aes(label = verbLemma)) + 
+  scale_x_continuous(trans = log_trans(),
+                     labels = function(x)round(x)) +
+  labs(x = "Est. Dative Exposure By Age 20", 
+       y = "DO Preference\n (Dative Uses)") 
+
+plot.corpusSummary2 
+
+```
+
+```{r}
+# Confirm effect of frequency on DO rate 
+# log(imputed_ditransitive_rate) 0.044598   0.007473   5.968 3.51e-08 ***
+fit.skew <- lm(imputed_DO_skew ~ log(imputed_ditransitive_rate), 
+     data = (df.all_preferences %>% filter(imputed_ditransitive_rate >0)))
+summary(fit.skew)
+
+```
+
+
+## Figure 1C: Imputed vs Surface Skew
+For each verb, compare the DO-skew (prefernce for DO form) among datives and nondatives. 
+
+```{r}
+# We filter out any verbs where we have fewer than 10 non-datives 
+#   (not enough to calcualte a DO skew for non-dative uses)
+# and whose log imputed dative frequency is not greater than 0 
+#   (not enough to calculate a DO skew for dative uses)
+
+df.moreThanTenJunkedExamples <- df.gold_labels %>% 
+  filter(isDative == FALSE) %>% 
+  group_by(verbLemma) %>% 
+  summarize(n = n()) %>% 
+  filter(n >= 10) %>% 
+  select(-n)
+
+plot.corpusSummary3 <- df.all_preferences %>% 
+  filter(verbLemma %in% df.moreThanTenJunkedExamples$verbLemma) %>%
+  filter(imputed_ditransitive_rate >0) %>% 
+  ggplot(aes(x = imputed_DO_skew, 
+             y = redHerring_DO_skew)) + 
+  geom_abline(slope = 1, 
+              intercept = 0, 
+              lty = 3) + 
+  geom_point(aes(
+    alpha = log(imputed_ditransitive_rate))) + 
+  geom_text_repel(aes(label = verbLemma)) + 
+  labs(
+    # title = "Preference for DO Structure",
+    # subtitle = "Over Red Herrings vs Datives Only", 
+    x = "DO Preference \n (Dative Uses)", 
+    y = "DO Preference \n (Non-Dative Uses)") + 
+  theme(legend.position = "none") 
+
+plot.corpusSummary3
+
+plot.patchwork <- plot.corpusSummary1 + plot.corpusSummary2 + plot.corpusSummary3 +
+  plot_layout(widths = c(1, 2, 2))  + plot_annotation(tag_levels = 'A')
+
+```
+
+
+# Fitting Models
+
+## Adjust Variable Coding
+```{r}
+# We fit the model on 6837 examples of 91 verb lemmas (those w at least 10 true dative examples) 
+df.datives <- df.gold_labels %>% 
+  filter(isDative == TRUE & ableToTiebreak == TRUE & 
+           themeDefinite != "UNK" & recipientDefinite != "UNK") %>% 
+  group_by(verbLemma) %>% 
+  add_count() %>% 
+  filter(n >=10) %>% 
+  select(-n) %>% 
+  ungroup()
+
+df.datives %>% nrow()
+df.datives %>% group_by(verbLemma) %>% summarize() %>% nrow()
+
+df.datives %>% group_by(verbLemma) %>% add_count() %>% filter(n>=50) %>% summarize() %>% nrow()
+
+# We fit the model using the OG Bresnan et al animacy scheme, with 2 labels:
+## RecipientAnimacy: 1 (human + animal) or 0 
+## ThemeConcrete: 1 (for concrete things) or 0 
+df.datives_recoded <- df.datives %>% 
+  mutate(
+    themeConcrete = case_when(
+      themeAnimacy %in% c('Human', 'Animal', 'Concrete', 'Vehicle', 'Machine') ~ 1,
+      .default = 0), # Org, NotConc, time, Mix, place, no way to decide, machine
+    themeAnimacy = case_when(
+      themeAnimacy %in% c('Human', 'Animal') ~ 1, .default = 0),
+    recipientConcrete = case_when(
+      recipientAnimacy %in% c('Human', 'Animal', 'Concrete', 'Vehicle', 'Machine') ~ 1,
+      .default = 0),
+    recipientAnimacy = case_when(
+      recipientAnimacy %in% c('Human', 'Animal') ~ 1, .default = 0))
+
+
+# recode all the fixed effects
+df.model_data_corpus <- df.datives_recoded %>% 
+  mutate(
+    structure = case_when(
+      structure == "PP" ~ 0, 
+      structure == "DO" ~ 1),
+    themeNumber = case_when(
+      is.na(themeNumber) ~ "NA", 
+      .default = themeNumber),
+    recipientNumber = case_when(
+      is.na(recipientNumber)~"NA", 
+      .default = recipientNumber),
+    recipientPerson = case_when(
+      recipientPerson == 'third' ~ 'nonlocal', 
+      .default = 'Local'),
+    themePerson = case_when(
+      themePerson == 'third' ~ 'nonlocal', 
+      .default = 'Local'))%>% 
+  mutate(
+    previousStructure = factor(previousStructure, levels = c("None", "DO", "PP")),
+    themeNumber = as.factor(themeNumber), 
+    recipientNumber = as.factor(recipientNumber),
+    themeDefinite = as.factor(themeDefinite),
+    recipientDefinite = as.factor(recipientDefinite),
+    themeGiven = as.factor(themeGiven), 
+    recipientGiven = as.factor(recipientGiven), 
+    themeAnimacy = as.factor(themeAnimacy),
+    themeConcrete = as.factor(themeConcrete),
+    recipientAnimacy = as.factor(recipientAnimacy), 
+    themePronominal = as.factor(themePronominal),
+    recipientPronominal = as.factor(recipientPronominal),
+    themePerson = as.factor(themePerson), 
+    recipientPerson = as.factor(recipientPerson),
+    verbSense = as.factor(verbSense), 
+    lengthDifference = case_when(
+      themeLength > recipientLength ~ log(abs(themeLength-recipientLength) +.5),
+      .default = -1*log(abs(themeLength-recipientLength) +.5))
+  )
+
+  
+```
+
+
+## Fit Models
+
+```{r}
+# Takes about four minutes on Emmy's machine
+fit.bresnanBays <- brm(structure ~
+                       verbSense +
+                       themeGiven + recipientGiven +
+                       themePronominal + recipientPronominal +
+                       themeDefinite + recipientDefinite +
+                       recipientAnimacy +
+                       themeConcrete +
+                       recipientPerson +
+                       recipientNumber + themeNumber +
+                       previousStructure +
+                       lengthDifference +
+                       (1|verbLemma),
+                     data = df.model_data_corpus,
+                     family = bernoulli(link = "logit"),
+                    warmup = 500,
+                    iter = 2000,
+                    chains = 4,
+                    init = "0",
+                    cores = 2,
+                    seed = 123)
+
+
+summary(fit.bresnanBays)
+
+```
+
+
+## Figure 2: Plot Fitted Fixed Effects Coefficients 
+```{r}
+lst.fixedEffectsLabels = c( 'Length Difference', 
+                           'Preceding PP Dative',
+                           'Preceding DO Dative',
+                           'Singular Theme', 
+                           'Plural Theme', 
+                           'Singular Recip', 
+                           'Plural Recip', 
+                           'Non Local Recipient', 
+                           'Concrete Theme', 
+                           'Animate Recipient', 
+                           'Indefinite Recipient', 
+                           'Indefinite Theme',
+                           'Pronominal Recipient', 
+                           'Pronominal Theme', 
+                           'Not Given Recipient', 
+                           'Not Given Theme', 
+                           'Transfer Poss. Sense', 
+                           'Future Poss. Sense', 
+                           'Communication Sense',
+                           'Intercept')
+
+plot.fixedEffects <- plot_model(fit.bresnanBays, 
+           vline.color = "black",
+           axis.labels = lst.fixedEffectsLabels,
+           show.values = TRUE, 
+           transform = NULL,
+           value.offset = .3,
+           bpe = "mean",
+           show.intercept = TRUE,
+           bpe.style = "dot", 
+           colors = c("#8C1515", "#67AFD2"), 
+           title = "")
+
+plot.fixedEffects
+
+```
+
+
+# Figure 3: Observed vs Predicted Preferences
+
+```{r}
+# Augment behaves weirdly for BRMS models; used predicted_draws() from tidybayes
+# (helpful: https://www.andrewheiss.com/blog/2021/11/10/ame-bayes-re-guide/ and 
+# https://github.com/bbolker/broom.mixed/issues/125 )
+# WARNING: draws 6,000 observations for each element in newdata, resulting df is
+# kind of large. Fine on my machine, just be awre if you end up making multiples
+df.predictionsBays <- predicted_draws(fit.bresnanBays, newdata = df.model_data_corpus , re_formula = NA)
+
+```
+
+```{r}
+plot.histogram <- df.predictionsBays %>% 
+  group_by(verbLemma) %>%
+  summarize(fittedSkew = mean(.prediction)) %>% 
+  left_join(df.all_preferences, 
+          join_by(verbLemma)) %>% 
+  rename(Predicted = fittedSkew, 
+         Observed = imputed_DO_skew) %>% 
+  select(verbLemma, Predicted, Observed) %>% 
+  pivot_longer(names_to = 'Skew', 
+               values_to = "DO Preference",
+               cols = c(Predicted, Observed)) %>%
+  ggplot(aes(x = `DO Preference`, fill = Skew)) + 
+  geom_histogram(alpha = .6, bins = 40, position = "identity") + 
+  ylab("N. VerbLemmas") + 
+  theme(legend.position = "bottom", 
+        legend.title = element_blank(),
+        legend.margin=margin(-10, 0, 0, 0)) + 
+  # scale_fill_manual(values=c("#FEC51D", "#67AFD2")) # HSP plot
+  scale_fill_manual(values = c("#F9A44A", "#67AFD2")) # Cogsci Plot
+plot.histogram
+
+
+  
+```
+
+
+
+## Idiosyncrasy vs Frequency
+```{r}
+# Plot Residuals By Frequency 
+
+plot.residuals <- df.predictionsBays %>% 
+  mutate(resid = abs(structure-.prediction)) %>% 
+  group_by(verbLemma, verbClass) %>% 
+  summarize(residuals = mean(resid)) %>% 
+  left_join(df.all_preferences, 
+          join_by(verbLemma)) %>% 
+  mutate(imputed_DO_majority = as.factor(imputed_DO_skew >.5)) %>%
+  ggplot(aes(x = projected_dative_instances_by_college_age,
+             y = residuals)) + 
+  # geom_smooth(method = "lm", color = "#417865", fill = "#8AB8A7") + # HSP plot
+  geom_smooth(method  = "lm", color = "#67AFD2")+ # cogsci
+  geom_point() + 
+  geom_text_repel(aes(label = verbLemma), max.overlaps = 6, size = 5) + 
+  scale_x_continuous(trans = log_trans(),
+                     labels = function(x)round(x)) +
+  labs(y = "Absolute Difference in Predicted \n and Observed DO Preference", 
+       x = "Est. Dative Exposure By Age 20") +
+  theme(legend.position = "bottom",
+        legend.margin=margin(-10, 0, 0, 0), 
+        text = element_text(size = 20))
+plot.residuals 
+
+plot.patchwork <- plot.histogram + plot.residuals + plot_annotation(tag_levels = 'A')
+plot.patchwork
+
+
+
+```
+
+
+# Imputed Skew, Not Surface Skew, Predicts Verb Idiosyncracies 
+```{r}
+
+# Make a tibble with the estimated intercept for each verb 
+df.bresnanBays_randomIntercepts <- ranef(fit.bresnanBays)$verbLemma[, , "Intercept"] %>% 
+  as.data.frame() %>% 
+  mutate(verbLemma = rownames(ranef(fit.bresnanBays)$verbLemma[, , "Intercept"])) %>%
+  rename(estimated_intercept = Estimate) %>% 
+  left_join(df.all_preferences, join_by(verbLemma))
+
+# Surface vs Imputed
+fit.random_surface <- lm(estimated_intercept ~ surface_DO_skew + imputed_DO_skew, 
+                  data = df.bresnanBays_randomIntercepts)
+
+# Vif score should be below 5, these predictors are super correlated though: 
+# surface_DO_skew imputed_DO_skew 
+#        10.84222        10.84222 
+vif(fit.random_surface)
+
+# Reported in Cogsci paper: 
+# Instead of taking two correlated predictors, take the distribution of just 
+# the "red Herrings" (nondatives) and the distribution of just the datives
+#                    Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)         -1.9749     0.1461 -13.519   <2e-16 ***
+# redHerring_DO_skew   0.6256     0.5306   1.179    0.242    
+# imputed_DO_skew      6.0075     0.4690  12.808   <2e-16 ***
+fit.random_herring <- lm(estimated_intercept ~ redHerring_DO_skew + imputed_DO_skew, 
+                  data = df.bresnanBays_randomIntercepts)
+summary(fit.random_herring)
+# 
+# redHerring_DO_skew    imputed_DO_skew 
+#           1.823485           1.823485 
+vif(fit.random_herring)
+
+```
+
+

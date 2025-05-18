@@ -1,0 +1,334 @@
+---
+title: "R Notebook"
+---
+# Setup
+```{r}
+library(tidyverse)
+library(stringr)
+library(lme4)
+library(sjPlot)
+library(broom.mixed)
+library(brms)
+library(tidybayes)
+library(ggrepel)
+library(patchwork)
+library(scales) #for plotting things with nice log transformed axes 
+library(here)
+
+theme_set(theme_light(base_size = 20)) 
+
+```
+
+# Load Corpus Data
+Preferences dataset includes frequency measures ('imputed': rate as a dative, 'surface': rate as dative + nondative); as well as structural preferences (DO skew measured over 'surface': datives and non datives, 'imputed': datives, 'redherring': only non-datives).
+
+None of those values are log transformed yet, and the frequency estiamtes are per BILLION words. 
+```{r}
+df.gold_labels <- readRDS(here('data', 'gold_all.rds'))
+df.all_preferences <- readRDS(here('data', 'gold_structural_preferences.Rds'))
+
+```
+
+# Read in Human Preference Data
+```{r}
+
+# Try loading in the Hawkins data for comparison 
+# Filter for only verbs marked as alternating in Levin- we only looked at those,
+# and there are too many to plot all of the non-alternating ones. 
+
+# I also had to hand-code things like theme animacy, theme number, and verb sense 
+df.humanData_preferences <- read_csv(here("data", "humanPreferenceData", "generated_pairs_with_results.csv"))
+df.humanData_themeAnimacy <- read_csv(here("data", "humanPreferenceData", "humanPrefData_themeAnimacy.csv"))
+df.humanData_themeNumber <- read_csv(here("data", "humanPreferenceData", "humanPrefData_themeNumber.csv"))
+df.humanData_verbSense <- read_csv(here("data", "humanPreferenceData", "humanPrefData_verbSense.csv"))
+df.humanData_autoLabels <- read_csv(here("data", "humanPreferenceData", "generated_pairs_extraCategories.csv")) %>% 
+  select(-theme_type, -recipient_id, -verb_id, -theme_id,
+         -verb_id, -classification, -frequency_rank,
+         -PDsentence, -theme_type, -theme_id) # Remove columns redundant with hawkins_raw
+
+
+# In HumanPref dataset, all verbs in past tense; load a dict to convert to present
+df.tenseConversion <- read_delim(here("data", "humanPreferenceData", "verbTenseConversion.txt")) %>% 
+  rename(verb = past)
+
+
+# In the comparison with our data, need only alternating verbs
+df.humanData_preferences_all <- df.humanData_preferences %>% 
+  filter(classification == "alternating") %>% 
+  left_join(df.tenseConversion, join_by(verb)) %>%
+  rename(verbLemma = present)
+
+df.humanData_preferences_items <- df.humanData_preferences  %>% 
+  filter(classification == "alternating") %>% 
+  left_join(df.tenseConversion, join_by(verb)) %>%
+  rename(verbLemma = present) %>% 
+  group_by(verbLemma, DOsentence) %>%
+  summarize(itemMeanDOPreference = mean(DOpreference)/100)
+  
+
+#Join in some missing automatic annotations of hawkins' themes 
+df.humanData_sentences <- left_join(df.humanData_preferences_all, 
+                    df.humanData_autoLabels, 
+                    by = join_by(DOsentence,verb)) %>%
+  # And join in also the hand-annotated categories. 
+  separate(theme, " ", 
+           into = c("detOne", "detTwo", "detThree", "themeHead"), 
+           fill = "left", 
+           remove = FALSE) %>% 
+  left_join(df.humanData_themeAnimacy, join_by(themeHead))  %>% 
+  mutate(themeLength = str_count(theme, "\\w+"),
+         recipientLength = str_count(recipient, "\\w+"), 
+         lengthDifference = case_when(
+           themeLength > recipientLength ~ log(abs(themeLength-recipientLength) +.5),
+           .default = -1*log(abs(themeLength-recipientLength) +.5)),
+         themeDefinite = case_when(themeDefinite == TRUE ~ "Definite", 
+                                   .default = "Indefinite"), 
+         recipientDefinite = case_when(recipientDefinite==TRUE ~ "Definite", 
+                                       .default = "Indefinite")) %>%
+  # Group by sentence and get average preference for DO form 
+  select(verbLemma, theme, recipient, 
+         themeAnimacy, recipientAnimacy, 
+         themePronominal, recipientPronominal,
+         themeDefinite, recipientDefinite,
+         lengthDifference, DOsentence) %>% 
+  unique() %>% 
+  left_join(df.humanData_themeNumber) %>% 
+  left_join(df.humanData_verbSense, join_by(theme, verbLemma))
+```
+
+
+# Get the Model Fit to Corpus Data
+```{r}
+# Corpus examples
+df.datives <- df.gold_labels %>% 
+  filter(isDative == TRUE & ableToTiebreak == TRUE & 
+           themeDefinite != "UNK" & recipientDefinite != "UNK") %>% 
+  group_by(verbLemma) %>% 
+  add_count() %>% 
+  filter(n >=10) %>% 
+  select(-n) %>% 
+  ungroup()
+
+
+# We fit the model using the OG Bresnan et al animacy scheme, with 2 labels:
+## RecipientAnimacy: 1 (human + animal) or 0 
+## ThemeConcrete: 1 (for concrete things) or 0 
+df.datives_recoded <- df.datives %>% 
+  mutate(
+    themeConcrete = case_when(
+      themeAnimacy %in% c('Human', 'Animal', 'Concrete', 'Vehicle', 'Machine') ~ 1,
+      .default = 0), # Org, NotConc, time, Mix, place, no way to decide, machine
+    themeAnimacy = case_when(
+      themeAnimacy %in% c('Human', 'Animal') ~ 1, .default = 0),
+    recipientConcrete = case_when(
+      recipientAnimacy %in% c('Human', 'Animal', 'Concrete', 'Vehicle', 'Machine') ~ 1,
+      .default = 0),
+    recipientAnimacy = case_when(
+      recipientAnimacy %in% c('Human', 'Animal') ~ 1, .default = 0))
+
+
+# recode all the fixed effects
+df.model_data_corpus <- df.datives_recoded %>% 
+  mutate(
+    structure = case_when(
+      structure == "PP" ~ 0, 
+      structure == "DO" ~ 1),
+    themeNumber = case_when(
+      is.na(themeNumber) ~ "NA", 
+      .default = themeNumber),
+    recipientNumber = case_when(
+      is.na(recipientNumber)~"NA", 
+      .default = recipientNumber),
+    recipientPerson = case_when(
+      recipientPerson == 'third' ~ 'nonlocal', 
+      .default = 'Local'),
+    themePerson = case_when(
+      themePerson == 'third' ~ 'nonlocal', 
+      .default = 'Local'))%>% 
+  mutate(
+    previousStructure = factor(previousStructure, levels = c('None', "DO", "PP")),
+    themeNumber = as.factor(themeNumber), 
+    recipientNumber = as.factor(recipientNumber),
+    themeDefinite = as.factor(themeDefinite),
+    recipientDefinite = as.factor(recipientDefinite),
+    themeGiven = as.factor(themeGiven), 
+    recipientGiven = as.factor(recipientGiven), 
+    themeAnimacy = as.factor(themeAnimacy), 
+    themeConcrete = as.factor(themeConcrete),
+    recipientAnimacy = as.factor(recipientAnimacy), 
+    themePronominal = as.factor(themePronominal),
+    recipientPronominal = as.factor(recipientPronominal),
+    themePerson = as.factor(themePerson), 
+    recipientPerson = as.factor(recipientPerson),
+    verbSense = as.factor(verbSense), 
+    lengthDifference = case_when(
+      themeLength > recipientLength ~ log(abs(themeLength-recipientLength) +.5),
+      .default = -1*log(abs(themeLength-recipientLength) +.5))
+  )
+
+fit.bresnanBays <- brm(structure ~
+                       verbSense +
+                       themeGiven + recipientGiven +
+                       themePronominal + recipientPronominal +
+                       themeDefinite + recipientDefinite +
+                       recipientAnimacy +
+                       themeConcrete +
+                       recipientPerson +
+                       recipientNumber + themeNumber +
+                       previousStructure +
+                       lengthDifference +
+                       (1|verbLemma),
+                     data = df.model_data_corpus, 
+                     family = bernoulli(link = "logit"),
+                    warmup = 500, 
+                    iter = 2000,
+                    chains = 4,
+                    init = "0", 
+                    cores = 2, 
+                    seed = 123)
+
+summary(fit.bresnanBays)
+```
+
+
+# Check Model Performance against Human Data 
+```{r}
+df.model_data_human <- df.humanData_sentences %>% 
+  left_join(df.humanData_preferences_items, join_by(verbLemma, DOsentence)) %>% 
+  filter(verbLemma %in% df.model_data_corpus$verbLemma) %>% # 81 verb lemmas in both sets 
+  mutate(verbLemma = as_factor(verbLemma),
+         themeGiven = "Not Given",
+         recipientGiven = "Not Given", 
+         recipientNumber = "Sing", # Even "a team" is singular in model data
+         themeConcrete = case_when(
+           themeAnimacy %in% c('Human', 'Animal', 'Concrete', 'Vehicle', 'Machine') ~ 1,
+           .default = 0), # Org, NotConc, time, Mix, place, no way to decide, machine
+         themeAnimacy = case_when(
+           themeAnimacy %in% c('Human', 'Animal') ~ 1, .default = 0),
+         recipientAnimacy = case_when(
+           recipientAnimacy %in% c('Human', 'Animal') ~ 1, .default = 0),
+         previousStructure = "None", 
+         recipientPerson = 'nonlocal'# all third person  
+         )
+
+```
+
+
+# Get Model Predictions on Human Data 
+```{r}
+# WARNING: This will draw 6,000 samples for each observation 
+# Check that you have space for such a large DF !  :) 
+df.predictionsBays_NORE <- predicted_draws(fit.bresnanBays, newdata = df.model_data_human, re_formula = NA)
+# WARNING: This will again draw 6,000 samples for each observation 
+# Check that you have space for such a large DF !  :) 
+df.predictionsBays_WITHRE <- predicted_draws(fit.bresnanBays, newdata = df.model_data_human)
+
+```
+
+## Figure 4A: Distribution of Model Predictions vs Human Data 
+```{r}
+
+# Average over all observed values for each verb, to get observed skew 
+# We average over the original observations dataset, with multiple
+# participant jugements, rather than a grand mean over by-item means. 
+df.observedHumanPrefData <- df.humanData_preferences_all %>% 
+  group_by(verbLemma) %>% 
+  summarize(human_DO_skew = mean(DOpreference)/100)
+
+#Average over all predicted values for each verb, to get predicted skew
+df.predictionsBays_WITHRE_withHuman <- df.predictionsBays_WITHRE %>% 
+  group_by(verbLemma) %>% 
+  summarize(predicted_DO_skew = mean(.prediction)) %>% 
+  left_join(df.observedHumanPrefData, join_by(verbLemma)) %>% 
+  left_join(df.all_preferences)
+
+df.predictionsBays_WITHOUTRE_withHuman <- df.predictionsBays_NORE %>% 
+  group_by(verbLemma) %>% 
+  summarize(predicted_DO_skew = mean(.prediction)) %>% 
+  left_join(df.observedHumanPrefData, join_by(verbLemma)) %>% 
+  left_join(df.all_preferences)
+
+```
+
+
+```{r}
+plot.1 <- df.predictionsBays_WITHRE_withHuman %>% 
+  rename(Human = human_DO_skew, Predicted = predicted_DO_skew ) %>% 
+  pivot_longer(names_to = "skewType", 
+               values_to = "DO Preference", 
+               cols = c(Human, Predicted)) %>% 
+  ggplot(aes(x = `DO Preference`, 
+             fill = skewType)) + 
+  geom_histogram(bins = 50, alpha = .6, position = "identity") + 
+  theme(legend.position = "bottom") + 
+  labs(y = "N. Verb Lemmas", 
+       x = "DO Preference", 
+       fill = "Skew Type")
+plot.1
+
+```
+
+
+## DO Preference predicted by dative skew, not non-dative skew 
+```{r}
+
+# Coefficients:
+#                    Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)         0.19495    0.05051   3.859 0.000233 ***
+# predicted_DO_skew   0.71380    0.44204   1.615 0.110398    
+# imputed_DO_skew     0.20423    0.03828   5.335 9.07e-07 ***
+# redHerring_DO_skew  0.03620    0.04507   0.803 0.424288  
+fit.surfaceVSimputed<- lm(human_DO_skew ~ predicted_DO_skew + 
+                    imputed_DO_skew + 
+                    redHerring_DO_skew, 
+                  data = df.predictionsBays_WITHOUTRE_withHuman)
+
+summary(fit.surfaceVSimputed)
+```
+
+## Correlation between model predictions and human skew 
+```{r}
+# Corrcoef: 0.7644598
+corrcoef <- cor(df.predictionsBays_WITHRE_withHuman$predicted_DO_skew, 
+                df.predictionsBays_WITHRE_withHuman$human_DO_skew, 
+                method = "pearson") 
+corrcoef
+```
+
+
+# Figure 4B: Frequency Predicts Idiosyncracy 
+```{r}
+# Increasing Frequency still associated with more idiosyncratic behaviour: more 
+# Popular verbs have preferences which are predicted worse by the fixed effects
+plot.2 <- df.predictionsBays_WITHOUTRE_withHuman %>% 
+  mutate(fitVScorpusObserved = abs(predicted_DO_skew-human_DO_skew)) %>% 
+  ggplot(aes(x = projected_dative_instances_by_college_age, 
+             y = fitVScorpusObserved)) +
+  geom_smooth(method = "lm", color = "#67AFD2") +
+  geom_point() + 
+  scale_x_continuous(trans = log_trans(),
+                     labels = function(x)round(x)) +
+  geom_text_repel(aes(label = verbLemma)) + 
+  labs(y = "Absolute Difference in Predicted DO \n Preference and Mean Reportd DO Preference", 
+       x = "Estimated Dative Exposure by Age 20")
+plot.2
+
+plot.patchwork <- plot.1 + plot.2 + plot_annotation(tag_levels = 'A')
+
+plot.patchwork
+
+  
+```
+
+
+
+# Frequency predicts DO Form
+```{r}
+#                                Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)                    0.247356   0.022241  11.121  < 2e-16 ***
+# log(imputed_ditransitive_rate) 0.017703   0.003466   5.108 2.17e-06 ***
+fit.skew <- lm(human_DO_skew ~ log(imputed_ditransitive_rate), 
+     data = (df.predictionsBays_WITHOUTRE_withHuman %>% filter(imputed_ditransitive_rate >0)))
+summary(fit.skew)
+
+```
