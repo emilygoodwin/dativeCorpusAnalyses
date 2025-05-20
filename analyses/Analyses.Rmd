@@ -19,11 +19,23 @@ theme_set(theme_light(base_size = 20))
 ```
 
 # Load Data
-```{r}
+All preferences codes frequency metrics for the verbs in different structures. 
 
+**Surface metrics**: means the metric is calculated over things with dative surface syntax, but not necessarily dative semantics (Stanza parsed it into a V NP NP or V NP to-PP, but it could have been for example a spatial goal like "throw the glass to the floor"). 
+
+**Imputed dative metrics**: are estimated metrics for the datives-only, based on the dative yield we had after sampling and annotating for dative status. 
+
+**Nondative DO skew**: Of the examples which were judged nondative, the proportion that had the V NP NP syntax 
+
+**Frequency**: is the instances per billion words 
+
+**Projected instances by college age**: We multiply the estimated frequency per billion words by *.35, which assumes that by roughly age 20 speakers have heard roughly 350 million words. This is the more generous estimate used in Levy et al. (2012) "The processing of extraposed structures in English" (see footnote 9).
+
+```{r}
 df.all_preferences <- readRDS(here('data', 'gold_structural_preferences.Rds'))
 df.gold_labels <- readRDS(here('data', 'gold_all.rds'))
 ```
+
 
 
 # Corpus Summary Plots- Figure 1 
@@ -60,7 +72,7 @@ plot.corpusSummary1
 ## Figure 1B: Frequency vs DO Preference
 ```{r}
 plot.corpusSummary2 <- df.all_preferences %>% 
-  filter(imputed_ditransitive_rate > 0) %>% 
+  filter(imputed_dative_frequency > 0) %>% 
   ggplot(aes(x = projected_dative_instances_by_college_age, 
              y = imputed_DO_skew)) + 
   geom_smooth(method  = "lm", color = "#67AFD2")+
@@ -78,8 +90,8 @@ plot.corpusSummary2
 ```{r}
 # Confirm effect of frequency on DO rate 
 # log(imputed_ditransitive_rate) 0.044598   0.007473   5.968 3.51e-08 ***
-fit.skew <- lm(imputed_DO_skew ~ log(imputed_ditransitive_rate), 
-     data = (df.all_preferences %>% filter(imputed_ditransitive_rate >0)))
+fit.skew <- lm(imputed_DO_skew ~ log(imputed_dative_frequency), 
+     data = (df.all_preferences %>% filter(imputed_dative_frequency >0)))
 summary(fit.skew)
 
 ```
@@ -103,14 +115,14 @@ df.moreThanTenJunkedExamples <- df.gold_labels %>%
 
 plot.corpusSummary3 <- df.all_preferences %>% 
   filter(verbLemma %in% df.moreThanTenJunkedExamples$verbLemma) %>%
-  filter(imputed_ditransitive_rate >0) %>% 
+  filter(imputed_dative_frequency >0) %>% 
   ggplot(aes(x = imputed_DO_skew, 
-             y = redHerring_DO_skew)) + 
+             y = nonDative_DO_skew)) + 
   geom_abline(slope = 1, 
               intercept = 0, 
               lty = 3) + 
   geom_point(aes(
-    alpha = log(imputed_ditransitive_rate))) + 
+    alpha = log(imputed_dative_frequency))) + 
   geom_text_repel(aes(label = verbLemma)) + 
   labs(
     # title = "Preference for DO Structure",
@@ -377,7 +389,7 @@ vif(fit.random_surface)
 # (Intercept)         -1.9749     0.1461 -13.519   <2e-16 ***
 # redHerring_DO_skew   0.6256     0.5306   1.179    0.242    
 # imputed_DO_skew      6.0075     0.4690  12.808   <2e-16 ***
-fit.random_herring <- lm(estimated_intercept ~ redHerring_DO_skew + imputed_DO_skew, 
+fit.random_herring <- lm(estimated_intercept ~ nonDative_DO_skew + imputed_DO_skew, 
                   data = df.bresnanBays_randomIntercepts)
 summary(fit.random_herring)
 # 
